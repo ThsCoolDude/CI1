@@ -1,0 +1,109 @@
+# 🚀 Crypto Invoice App — AI Build Instructions
+
+This is a minimal crypto invoice app built using **React**, **TypeScript**, **Zustand**, and **Tailwind CSS**. It supports **Ethereum (Sepolia)** and **Solana (devnet)** and uses a smart contract that forwards a fixed $1 fee to the app owner from every payment.
+
+---
+
+## ✅ MVP Features
+
+### 1. Invoice Creation
+- The **recipient must first connect their wallet**.
+- The wallet address is automatically saved as the recipient address for the invoice.
+- User fills the rest of the form:
+  - Client name
+  - Service description
+  - USD amount
+  - Token (ETH, SOL, USDC, USDT)
+- The app converts (USD + $1 fee) to the selected token.
+- A unique `invoiceId` is generated with `nanoid`.
+- Store the invoice in Zustand and localStorage.
+- After creation, redirect to `/invoice/:invoiceId`.
+
+### 2. Invoice Preview Page
+- Publicly accessible at `/invoice/:invoiceId`
+- Shows:
+  - Invoice details
+  - Total amount in USD and crypto
+  - Status: **Pending** or **Paid**
+  - QR code to pay
+  - A **“Pay Invoice”** button
+- The button triggers a wallet transaction using MetaMask (or Phantom for Solana).
+- Payment is sent to a smart contract, which handles fund forwarding.
+
+### 3. Smart Contract Integration (Ethereum, Sepolia)
+- Use a Solidity smart contract.
+- When funds are received:
+  - It forwards **$1** to a fixed **fee wallet**
+  - The remainder goes to the **recipient** (provided during invoice creation)
+- Contract emits an event when an invoice is paid.
+- Contract is deployed to Sepolia and accessible from the frontend.
+
+### 4. Blockchain Payment Tracking
+- Invoice page checks if the payment has been made.
+- Use `ethers.js` and/or `solana/web3.js` or API providers (Etherscan, Helius).
+- Match invoices using:
+  - Token
+  - Smart contract address
+  - Amount
+- If payment matches expected token/amount/address, update invoice status to "Paid".
+
+### 5. Testnet Support
+- **Only support Ethereum Sepolia and Solana devnet**
+- Alert users if connected to the wrong network.
+- Only test tokens supported: ETH, SOL, USDC, USDT (no BTC).
+
+---
+
+## 🧩 Architecture Guidance
+
+- Zustand → global invoice state
+- Tailwind CSS → clean UI
+- nanoid → generate `invoiceId`
+- `react-router` → dynamic route for `/invoice/:invoiceId`
+- `ethers.js` and `@solana/web3.js` for Web3 support
+- `payInvoice(invoice)` function to trigger wallet payments
+
+---
+
+## 📦 Suggested Folder Layout
+
+/src
+/pages
+CreateInvoice.tsx
+InvoicePage.tsx
+/components
+InvoiceForm.tsx
+InvoiceDetails.tsx
+WalletConnect.tsx
+/lib
+usdToToken.ts
+blockchain.ts
+checkPayment.ts
+/store
+invoiceStore.ts
+/contracts
+CryptoInvoice.sol
+deploy.cjs
+/constants
+config.ts
+
+---
+
+## 🧠 Agent To-Do (Next Steps)
+
+1. Require wallet connection (e.g., MetaMask) before invoice creation — use that as the recipient address.
+2. Update invoice creation form to remove manual "Recipient Address" input.
+3. Update smart contract (Solidity) if needed to receive the recipient address as input.
+4. Replace "Pay with MetaMask" with "Pay Invoice" and build the transaction flow for ETH/ERC20.
+5. Set up blockchain polling or use event listeners to detect payments and mark invoices as "Paid".
+
+---
+
+## ✅ Key Constraints
+
+- App must support **testnet only** (Sepolia & Solana devnet)
+- Only these tokens: **ETH, SOL, USDC, USDT**
+- $1 fee must be automatically taken and sent to a fixed fee wallet
+- No BTC, no other chains
+- Invoices must be **sharable links**
+- All functionality must work in-browser with no backend

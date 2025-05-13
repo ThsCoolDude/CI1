@@ -11,6 +11,7 @@ export interface Invoice {
   usdAmount: number;
   token: Token;
   recipientAddress: string;
+  walletType: 'ethereum' | 'solana';
   status: 'pending' | 'paid';
   createdAt: number;
 }

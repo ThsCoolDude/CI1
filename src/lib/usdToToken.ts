@@ -1,15 +1,35 @@
 import { TOKENS } from '../constants/config';
 
+const COINGECKO_IDS: Record<string, string> = {
+  ETH: 'ethereum',
+  SOL: 'solana',
+  USDC: 'usd-coin',
+  USDT: 'tether',
+};
+
 export async function getTokenPrice(token: keyof typeof TOKENS): Promise<number> {
-  // TODO: Implement price fetching from a price oracle or API
-  // For now, return mock prices for testing
-  const mockPrices: Record<keyof typeof TOKENS, number> = {
-    ETH: 2000, // $2000 per ETH
-    SOL: 100,  // $100 per SOL
-    USDC: 1,   // $1 per USDC
-    USDT: 1,   // $1 per USDT
-  };
-  return mockPrices[token];
+  const id = COINGECKO_IDS[token];
+  if (!id) throw new Error('Token not supported for price lookup');
+
+  try {
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`
+    );
+    const data = await res.json();
+    if (data && data[id] && data[id].usd) {
+      return data[id].usd;
+    }
+    throw new Error('Invalid price data');
+  } catch (e) {
+    // fallback to mock prices
+    const mockPrices: Record<keyof typeof TOKENS, number> = {
+      ETH: 2000,
+      SOL: 100,
+      USDC: 1,
+      USDT: 1,
+    };
+    return mockPrices[token];
+  }
 }
 
 export async function usdToToken(usdAmount: number, token: keyof typeof TOKENS): Promise<string> {

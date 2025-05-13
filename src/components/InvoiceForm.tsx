@@ -5,16 +5,17 @@ import type { Token } from '../store/invoiceStore';
 
 interface InvoiceFormProps {
   recipientAddress: string;
+  walletType: 'ethereum' | 'solana';
 }
 
-export const InvoiceForm = ({ recipientAddress }: InvoiceFormProps) => {
+export const InvoiceForm = ({ recipientAddress, walletType }: InvoiceFormProps) => {
   const navigate = useNavigate();
   const addInvoice = useInvoiceStore((state) => state.addInvoice);
   const [formData, setFormData] = useState({
     clientName: '',
     serviceDescription: '',
     usdAmount: '',
-    token: 'ETH' as Token,
+    token: walletType === 'ethereum' ? 'ETH' : 'SOL' as Token,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +35,7 @@ export const InvoiceForm = ({ recipientAddress }: InvoiceFormProps) => {
         usdAmount,
         token: formData.token,
         recipientAddress,
+        walletType,
       };
 
       addInvoice(invoice);
@@ -54,6 +56,12 @@ export const InvoiceForm = ({ recipientAddress }: InvoiceFormProps) => {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const getAvailableTokens = () => {
+    const commonTokens = ['USDC', 'USDT'];
+    const chainSpecificToken = walletType === 'ethereum' ? 'ETH' : 'SOL';
+    return [chainSpecificToken, ...commonTokens];
   };
 
   return (
@@ -117,10 +125,11 @@ export const InvoiceForm = ({ recipientAddress }: InvoiceFormProps) => {
           required
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
-          <option value="ETH">ETH</option>
-          <option value="SOL">SOL</option>
-          <option value="USDC">USDC</option>
-          <option value="USDT">USDT</option>
+          {getAvailableTokens().map((token) => (
+            <option key={token} value={token}>
+              {token}
+            </option>
+          ))}
         </select>
       </div>
 

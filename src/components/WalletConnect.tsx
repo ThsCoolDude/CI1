@@ -4,7 +4,7 @@ import { Connection, clusterApiUrl } from '@solana/web3.js';
 import { NETWORKS } from '../constants/config';
 
 interface WalletConnectProps {
-  onConnect: (address: string) => void;
+  onConnect: (address: string, walletType: 'ethereum' | 'solana') => void;
   onDisconnect?: () => void;
 }
 
@@ -113,7 +113,7 @@ export const WalletConnect = ({ onConnect, onDisconnect }: WalletConnectProps) =
 
       setConnectedWallet('ethereum');
       setConnectedAddress(address);
-      onConnect(address);
+      onConnect(address, 'ethereum');
     } catch (err) {
       console.error('Ethereum connection error:', err);
       setError(err instanceof Error ? err.message : 'Failed to connect wallet');
@@ -158,7 +158,7 @@ export const WalletConnect = ({ onConnect, onDisconnect }: WalletConnectProps) =
             console.log('Successfully connected to devnet');
             setConnectedWallet('solana');
             setConnectedAddress(address);
-            onConnect(address);
+            onConnect(address, 'solana');
             return;
           } catch (e) {
             console.error('Network check error:', e);

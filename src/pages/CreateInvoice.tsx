@@ -4,13 +4,16 @@ import { InvoiceForm } from '../components/InvoiceForm';
 
 export const CreateInvoice = () => {
   const [recipientAddress, setRecipientAddress] = useState<string | null>(null);
+  const [walletType, setWalletType] = useState<'ethereum' | 'solana' | null>(null);
 
-  const handleWalletConnect = (address: string) => {
+  const handleWalletConnect = (address: string, chain: 'ethereum' | 'solana') => {
     setRecipientAddress(address);
+    setWalletType(chain);
   };
 
   const handleWalletDisconnect = () => {
     setRecipientAddress(null);
+    setWalletType(null);
   };
 
   return (
@@ -31,8 +34,11 @@ export const CreateInvoice = () => {
             onDisconnect={handleWalletDisconnect}
           />
           
-          {recipientAddress && (
-            <InvoiceForm recipientAddress={recipientAddress} />
+          {recipientAddress && walletType && (
+            <InvoiceForm 
+              recipientAddress={recipientAddress} 
+              walletType={walletType}
+            />
           )}
         </div>
       </div>

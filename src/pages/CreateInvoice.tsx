@@ -9,6 +9,10 @@ export const CreateInvoice = () => {
     setRecipientAddress(address);
   };
 
+  const handleWalletDisconnect = () => {
+    setRecipientAddress(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -21,10 +25,13 @@ export const CreateInvoice = () => {
           </p>
         </div>
 
-        <div className="mt-12">
-          {!recipientAddress ? (
-            <WalletConnect onConnect={handleWalletConnect} />
-          ) : (
+        <div className="mt-12 space-y-8">
+          <WalletConnect 
+            onConnect={handleWalletConnect} 
+            onDisconnect={handleWalletDisconnect}
+          />
+          
+          {recipientAddress && (
             <InvoiceForm recipientAddress={recipientAddress} />
           )}
         </div>

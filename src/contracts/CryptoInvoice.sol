@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 contract CryptoInvoice {
     address public owner;
     address public feeWallet;
-    uint256 public constant FEE_AMOUNT = 1 ether; // $1 fee in wei
 
     event InvoicePaid(address indexed recipient, uint256 amount, uint256 fee);
 
@@ -18,22 +17,23 @@ contract CryptoInvoice {
         _;
     }
 
-    function payInvoice(address recipient) external payable {
-        require(msg.value > FEE_AMOUNT, "Amount must be greater than fee");
+    function payInvoice(address recipient, uint256 fee) external payable {
+        require(msg.value > fee, "Amount must be greater than fee");
         require(recipient != address(0), "Invalid recipient address");
+        require(fee > 0, "Fee must be greater than zero");
 
         // Calculate amount after fee
-        uint256 amountAfterFee = msg.value - FEE_AMOUNT;
+        uint256 amountAfterFee = msg.value - fee;
 
         // Send fee to fee wallet
-        (bool feeSuccess, ) = feeWallet.call{value: FEE_AMOUNT}("");
+        (bool feeSuccess, ) = feeWallet.call{value: fee}("");
         require(feeSuccess, "Fee transfer failed");
 
         // Send remaining amount to recipient
         (bool recipientSuccess, ) = recipient.call{value: amountAfterFee}("");
         require(recipientSuccess, "Recipient transfer failed");
 
-        emit InvoicePaid(recipient, amountAfterFee, FEE_AMOUNT);
+        emit InvoicePaid(recipient, amountAfterFee, fee);
     }
 
     function updateFeeWallet(address newFeeWallet) external onlyOwner {

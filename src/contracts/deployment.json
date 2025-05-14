@@ -1,5 +1,5 @@
 {
-  "address": "0x778A4782d7ca3d7DA31e0Af0f95b364Eb65F9a36",
+  "address": "0x239eAe057A14d69984E5541BdC2b318cc514D6B2",
   "abi": [
     {
       "inputs": [
@@ -38,16 +38,34 @@
       "type": "event"
     },
     {
-      "inputs": [],
-      "name": "FEE_AMOUNT",
-      "outputs": [
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
         {
           "internalType": "uint256",
-          "name": "",
+          "name": "fee",
           "type": "uint256"
         }
       ],
-      "stateMutability": "view",
+      "name": "payInvoice",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newFeeWallet",
+          "type": "address"
+        }
+      ],
+      "name": "updateFeeWallet",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -74,32 +92,6 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "recipient",
-          "type": "address"
-        }
-      ],
-      "name": "payInvoice",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "newFeeWallet",
-          "type": "address"
-        }
-      ],
-      "name": "updateFeeWallet",
-      "outputs": [],
-      "stateMutability": "nonpayable",
       "type": "function"
     },
     {

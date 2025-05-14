@@ -1,23 +1,84 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
-import { useInvoiceStore } from '../store/invoiceStore';
+import { db } from '../lib/firebase';
+import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { QRCodeSVG } from 'qrcode.react';
-import { CONTRACT_ADDRESS, NETWORKS } from '../constants/config';
+import { CONTRACT_ADDRESS, NETWORKS, FEE_WALLET_ADDRESS } from '../constants/config';
 import { usdToToken } from '../lib/usdToToken';
 
-interface InvoiceDetailsProps {
-  invoiceId: string;
+interface Invoice {
+  clientName: string;
+  serviceDescription: string;
+  usdAmount: number;
+  recipientAddress: string;
+  token: 'ETH' | 'SOL';
+  walletType: 'ethereum' | 'solana';
+  status: 'pending' | 'paid' | 'failed';
+  createdAt: any; // Firestore Timestamp
 }
 
-export const InvoiceDetails = ({ invoiceId }: InvoiceDetailsProps) => {
-  const [isProcessing, setIsProcessing] = useState(false);
+export const InvoiceDetails = () => {
+  const { invoiceId } = useParams<{ invoiceId: string }>();
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const invoice = useInvoiceStore((state) => state.getInvoice(invoiceId));
-  const updateInvoiceStatus = useInvoiceStore((state) => state.updateInvoiceStatus);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  if (!invoice) {
-    return <div className="text-center p-4">Invoice not found</div>;
+  const updateInvoiceStatus = async (newStatus: 'paid' | 'pending' | 'failed') => {
+    if (!invoiceId) return;
+    
+    try {
+      const docRef = doc(db, 'invoices', invoiceId);
+      await updateDoc(docRef, { status: newStatus });
+    } catch (error) {
+      console.error('Error updating invoice status:', error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    if (!invoiceId) {
+      setError('No invoice ID provided');
+      setIsLoading(false);
+      return;
+    }
+
+    console.log('Starting to fetch invoice from Firestore...');
+    console.log('Invoice ID to fetch:', invoiceId);
+
+    // Set up real-time listener
+    const docRef = doc(db, 'invoices', invoiceId);
+    const unsubscribe = onSnapshot(
+      docRef,
+      (doc) => {
+        if (doc.exists()) {
+          console.log('Invoice data from Firestore:', doc.data());
+          setInvoice(doc.data() as Invoice);
+        } else {
+          console.log('No invoice found in Firestore');
+          setError('Invoice not found');
+        }
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching invoice from Firestore:', error);
+        setError('Error loading invoice: ' + error.message);
+        setIsLoading(false);
+      }
+    );
+
+    // Cleanup subscription
+    return () => unsubscribe();
+  }, [invoiceId]);
+
+  if (isLoading) {
+    return <div className="text-center p-4">Loading invoice...</div>;
+  }
+
+  if (error || !invoice) {
+    return <div className="text-center p-4 text-red-500">{error || 'Invoice not found'}</div>;
   }
 
   const handleSolanaPayment = async () => {
@@ -34,19 +95,34 @@ export const InvoiceDetails = ({ invoiceId }: InvoiceDetailsProps) => {
 
       // Ensure we're on devnet
       const connection = new Connection(NETWORKS.SOLANA.DEVNET.endpoint);
-      const publicKey = new PublicKey(invoice.recipientAddress);
+      const recipientPublicKey = new PublicKey(invoice.recipientAddress);
+      const feeWalletPublicKey = new PublicKey(FEE_WALLET_ADDRESS.SOLANA);
       
-      // Calculate total amount in lamports using usdToToken
-      const totalUsd = invoice.usdAmount + 1;
-      const totalAmountStr = await usdToToken(totalUsd, invoice.token); // returns string
+      // Calculate amounts in lamports
+      const totalUsd = invoice.usdAmount + 1; // Total including fee
+      const totalAmountStr = await usdToToken(totalUsd, invoice.token);
       const totalAmount = Number(totalAmountStr);
+      
+      // Calculate fee amount (1 USD in lamports)
+      const feeAmountStr = await usdToToken(1, invoice.token);
+      const feeAmount = Number(feeAmountStr);
+      
+      // Calculate recipient amount (total - fee)
+      const recipientAmount = totalAmount - feeAmount;
 
-      // Create transaction
+      // Create transaction with two transfers
       const transaction = new Transaction().add(
+        // Transfer to recipient
         SystemProgram.transfer({
           fromPubkey: phantom.publicKey,
-          toPubkey: publicKey,
-          lamports: totalAmount,
+          toPubkey: recipientPublicKey,
+          lamports: recipientAmount,
+        }),
+        // Transfer fee to fee wallet
+        SystemProgram.transfer({
+          fromPubkey: phantom.publicKey,
+          toPubkey: feeWalletPublicKey,
+          lamports: feeAmount,
         })
       );
 
@@ -70,7 +146,14 @@ export const InvoiceDetails = ({ invoiceId }: InvoiceDetailsProps) => {
           throw new Error('Transaction failed: ' + confirmation.value.err);
         }
 
-        updateInvoiceStatus(invoiceId, 'paid');
+        console.log('Transaction successful:', {
+          signature: signed.signature,
+          recipientAmount: recipientAmount / 1e9, // Convert lamports to SOL
+          feeAmount: feeAmount / 1e9, // Convert lamports to SOL
+          totalAmount: totalAmount / 1e9 // Convert lamports to SOL
+        });
+
+        updateInvoiceStatus('paid');
       } catch (err) {
         console.error('Transaction error:', err);
         throw new Error('Failed to send transaction: ' + (err instanceof Error ? err.message : 'Unknown error'));
@@ -98,7 +181,6 @@ export const InvoiceDetails = ({ invoiceId }: InvoiceDetailsProps) => {
             params: [{ chainId: NETWORKS.ETHEREUM.SEPOLIA.chainId }],
           });
         } catch (switchError: any) {
-          // This error code indicates that the chain has not been added to MetaMask
           if (switchError.code === 4902) {
             await window.ethereum.request({
               method: 'wallet_addEthereumChain',
@@ -121,9 +203,18 @@ export const InvoiceDetails = ({ invoiceId }: InvoiceDetailsProps) => {
 
       const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
 
-      // Calculate total amount in wei using usdToToken
-      const totalUsd = invoice.usdAmount + 1;
-      const totalAmount = await usdToToken(totalUsd, invoice.token); // returns string
+      // Calculate fee and amount in wei using usdToToken
+      const fee = await usdToToken(1, invoice.token); // $1 fee in wei
+      const amount = await usdToToken(invoice.usdAmount, invoice.token); // invoice amount in wei
+      const total = ethers.BigNumber.from(fee).add(ethers.BigNumber.from(amount));
+      console.log('ETH payment debug:', {
+        fee: ethers.utils.formatEther(fee),
+        amount: ethers.utils.formatEther(amount),
+        total: ethers.utils.formatEther(total),
+        feeRaw: fee,
+        amountRaw: amount,
+        totalRaw: total.toString(),
+      });
 
       try {
         // First check if the contract has the payInvoice function
@@ -132,21 +223,27 @@ export const InvoiceDetails = ({ invoiceId }: InvoiceDetailsProps) => {
         }
 
         // Estimate gas first
-        const gasEstimate = await contract.estimateGas.payInvoice(invoice.recipientAddress, {
-          value: ethers.BigNumber.from(totalAmount),
-        });
+        const gasEstimate = await contract.estimateGas.payInvoice(
+          invoice.recipientAddress,
+          fee,
+          { value: total }
+        );
 
         // Add 20% buffer to gas estimate
         const gasLimit = gasEstimate.mul(120).div(100);
 
         // Send payment with gas limit
-        const tx = await contract.payInvoice(invoice.recipientAddress, {
-          value: ethers.BigNumber.from(totalAmount),
-          gasLimit,
-        });
+        const tx = await contract.payInvoice(
+          invoice.recipientAddress,
+          fee,
+          {
+            value: total,
+            gasLimit,
+          }
+        );
 
         await tx.wait();
-        updateInvoiceStatus(invoiceId, 'paid');
+        updateInvoiceStatus('paid');
       } catch (contractError: any) {
         if (contractError.code === 'INSUFFICIENT_FUNDS') {
           throw new Error('Insufficient funds to cover the payment and gas fees');
@@ -224,6 +321,18 @@ export const InvoiceDetails = ({ invoiceId }: InvoiceDetailsProps) => {
                 size={200}
               />
             </div>
+
+            <button
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('data', btoa(JSON.stringify(invoice)));
+                navigator.clipboard.writeText(url.toString());
+                alert('Invoice link copied to clipboard!');
+              }}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mb-4"
+            >
+              Copy Link
+            </button>
 
             <button
               onClick={handlePayment}

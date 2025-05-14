@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useInvoiceStore } from '../store/invoiceStore';
-import type { Token } from '../store/invoiceStore';
+import { db } from '../lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
+type Token = 'ETH' | 'SOL' | 'USDC' | 'USDT';
 
 interface InvoiceFormProps {
   recipientAddress: string;
   walletType: 'ethereum' | 'solana';
+  onInvoiceCreated?: (invoice: any) => void;
 }
 
-export const InvoiceForm = ({ recipientAddress, walletType }: InvoiceFormProps) => {
+export const InvoiceForm = ({ recipientAddress, walletType, onInvoiceCreated }: InvoiceFormProps) => {
   const navigate = useNavigate();
-  const addInvoice = useInvoiceStore((state) => state.addInvoice);
   const [formData, setFormData] = useState({
     clientName: '',
     serviceDescription: '',
@@ -18,10 +20,12 @@ export const InvoiceForm = ({ recipientAddress, walletType }: InvoiceFormProps) 
     token: walletType === 'ethereum' ? 'ETH' : 'SOL' as Token,
   });
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsSubmitting(true);
 
     try {
       const usdAmount = parseFloat(formData.usdAmount);
@@ -29,25 +33,32 @@ export const InvoiceForm = ({ recipientAddress, walletType }: InvoiceFormProps) 
         throw new Error('Please enter a valid amount');
       }
 
-      const invoice = {
+      const invoiceData = {
         clientName: formData.clientName,
         serviceDescription: formData.serviceDescription,
         usdAmount,
         token: formData.token,
         recipientAddress,
         walletType,
+        status: 'pending',
+        createdAt: serverTimestamp(),
       };
 
-      addInvoice(invoice);
+      // Save to Firestore
+      const docRef = await addDoc(collection(db, 'invoices'), invoiceData);
+      console.log('Invoice created with ID:', docRef.id);
 
-      // Get the latest invoice from the store
-      const invoices = useInvoiceStore.getState().invoices;
-      const latestInvoice = invoices[invoices.length - 1];
-
-      // Redirect to the invoice page using the invoice ID
-      navigate(`/invoice/${latestInvoice.id}`);
+      if (onInvoiceCreated) {
+        onInvoiceCreated({ ...invoiceData, id: docRef.id });
+      } else {
+        // Navigate to the invoice page using the Firestore document ID
+        navigate(`/invoice/${docRef.id}`);
+      }
     } catch (err) {
+      console.error('Error creating invoice:', err);
       setError(err instanceof Error ? err.message : 'Failed to create invoice');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -139,9 +150,10 @@ export const InvoiceForm = ({ recipientAddress, walletType }: InvoiceFormProps) 
 
       <button
         type="submit"
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        disabled={isSubmitting}
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
       >
-        Create Invoice
+        {isSubmitting ? 'Creating Invoice...' : 'Create Invoice'}
       </button>
     </form>
   );

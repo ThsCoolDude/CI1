@@ -108,3 +108,26 @@ config.ts
 - Invoices must be **sharable links**
 - All functionality must work in-browser with no backend
 - Use Firestore for real-time updates and persistence
+
+---
+
+## 🌗 Global UI/UX & Theming
+
+- **Enable dark mode support** (use Tailwind's `dark` class strategy)
+- Add a **light/dark mode toggle** in the navbar
+- Use **clean card layouts** with shadows and padding
+- Add **hover/focus effects** on buttons and form fields
+- Use a **modern system font** (or optionally Inter)
+- **Color system:**
+  - Primary: `#3B82F6` (Blue)
+  - Background Light: `#F9FAFB`
+  - Background Dark: `#111827`
+  - Success: `#059669`, Error: `#DC2626`
+  - Text: Dark Gray (`#111827`) or White in dark mode
+- **Landing Page** (`/`):
+  - Bold tagline: 'Create Crypto Invoices for Free – Only $1 Fee'
+  - Subheading explaining supported tokens (ETH, SOL, USDC, USDT)
+  - Big CTA button: 'Create Your First Invoice' → links to `/create`
+  - Section showing features (e.g., 'Send Invoices Instantly', 'Track Payments in Real-Time')
+  - Gradient background with soft purple/blue tones
+  - Responsive and visually modern, inspired by https://ballparkhq.com/

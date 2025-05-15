@@ -185,40 +185,57 @@ export const WalletConnect = ({ onConnect, onDisconnect }: WalletConnectProps) =
   };
 
   return (
-    <div className="flex flex-col items-center space-y-4 p-4">
-      <h2 className="text-xl font-semibold">Connect Your Wallet</h2>
+    <div className="flex flex-col items-center space-y-6">
       {!connectedWallet ? (
-        <div className="flex space-x-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
           <button
             onClick={connectEthereum}
             disabled={isConnecting}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            className="group flex items-center justify-center space-x-2 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
           >
-            {isConnecting ? 'Connecting...' : 'Connect MetaMask'}
+            <svg className="w-6 h-6 transform group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21.49 4L13.54 0.9C12.62 0.5 11.58 0.5 10.66 0.9L2.71 4C1.79 4.4 1.2 5.3 1.2 6.3V17.7C1.2 18.7 1.79 19.6 2.71 20L10.66 23.1C11.58 23.5 12.62 23.5 13.54 23.1L21.49 20C22.41 19.6 23 18.7 23 17.7V6.3C23 5.3 22.41 4.4 21.49 4ZM12.1 2.5L19.5 5.5L12.1 8.5L4.7 5.5L12.1 2.5ZM3.2 7.5L10.6 10.5V21.5L3.2 18.5V7.5ZM13.6 21.5V10.5L21 7.5V18.5L13.6 21.5Z" fill="currentColor"/>
+            </svg>
+            <span className="font-medium">{isConnecting ? 'Connecting...' : 'Connect MetaMask'}</span>
           </button>
           <button
             onClick={connectSolana}
             disabled={isConnecting}
-            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50"
+            className="group flex items-center justify-center space-x-2 px-6 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 disabled:opacity-50 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
           >
-            {isConnecting ? 'Connecting...' : 'Connect Phantom'}
+            <svg className="w-6 h-6 transform group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor"/>
+              <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="font-medium">{isConnecting ? 'Connecting...' : 'Connect Phantom'}</span>
           </button>
         </div>
       ) : (
-        <div className="flex flex-col items-center space-y-2">
-          <p className="text-sm text-gray-600">
-            Connected: {connectedAddress?.slice(0, 6)}...{connectedAddress?.slice(-4)}
-          </p>
+        <div className="flex flex-col items-center space-y-4 w-full max-w-md">
+          <div className="flex items-center space-x-3 px-4 py-3 bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700 dark:to-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+            <div className={`w-3 h-3 rounded-full ${connectedWallet === 'ethereum' ? 'bg-blue-500 animate-pulse' : 'bg-purple-500 animate-pulse'}`} />
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {connectedWallet === 'ethereum' ? 'MetaMask' : 'Phantom'} Connected
+            </p>
+          </div>
+          <div className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-xl text-center shadow-md hover:shadow-lg transition-all duration-300">
+            <p className="text-sm font-mono text-gray-600 dark:text-gray-400">
+              {connectedAddress?.slice(0, 6)}...{connectedAddress?.slice(-4)}
+            </p>
+          </div>
           <button
             onClick={disconnectWallet}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            className="px-4 py-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-all duration-300 hover:scale-105 active:scale-95"
           >
             Disconnect Wallet
           </button>
         </div>
       )}
       {error && (
-        <p className="text-red-500 text-sm mt-2">{error}</p>
+        <div className="w-full max-w-md px-4 py-3 bg-red-50 dark:bg-red-900/30 rounded-xl shadow-md animate-shake">
+          <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
+        </div>
       )}
     </div>
   );

@@ -281,7 +281,7 @@ export const InvoiceDetails = () => {
 
   return (
     <div className="flex justify-center items-center min-h-[60vh]">
-      <Card className="w-full max-w-3xl mx-auto rounded-2xl shadow-xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+      <Card className="w-full max-w-3xl mx-auto rounded-2xl shadow-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0">
         <CardContent className="p-8">
           <h2 className="text-3xl font-extrabold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-white dark:to-gray-300">Invoice Details</h2>
           <div className="flex flex-col md:flex-row gap-10">

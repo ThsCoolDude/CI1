@@ -9,16 +9,10 @@ export const InvoicePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Invoice Details
-          </h1>
-        </div>
-
-        <div className="mt-12">
-          <InvoiceDetails invoiceId={invoiceId} />
+    <div className="py-4">
+      <div className="max-w-2xl mx-auto px-2 sm:px-4 lg:px-6">
+        <div className="mt-4">
+          <InvoiceDetails />
         </div>
       </div>
     </div>

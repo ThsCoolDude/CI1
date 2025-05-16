@@ -6,11 +6,19 @@ import { useEffect, useState } from 'react';
 
 export const LandingPage = () => {
   // Dark mode toggle logic
-  const [darkMode, setDarkMode] = useState(() =>
-    typeof window !== 'undefined'
-      ? document.documentElement.classList.contains('dark')
-      : false
-  );
+  const getSystemTheme = () => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  };
+
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return getSystemTheme();
+    }
+    return false;
+  });
 
   useEffect(() => {
     if (darkMode) {

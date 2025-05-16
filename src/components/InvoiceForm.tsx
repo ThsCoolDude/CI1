@@ -89,7 +89,7 @@ export const InvoiceForm = ({ recipientAddress, walletType, onInvoiceCreated }: 
             value={formData.clientName}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
+            className="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white focus:text-gray-900 dark:focus:text-white transition-colors duration-200 pl-3"
             placeholder="Enter client name"
           />
         </div>
@@ -105,7 +105,7 @@ export const InvoiceForm = ({ recipientAddress, walletType, onInvoiceCreated }: 
             onChange={handleChange}
             required
             rows={3}
-            className="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
+            className="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white focus:text-gray-900 dark:focus:text-white transition-colors duration-200 pl-3"
             placeholder="Describe the service or product"
           />
         </div>
@@ -127,7 +127,7 @@ export const InvoiceForm = ({ recipientAddress, walletType, onInvoiceCreated }: 
               required
               min="0"
               step="0.01"
-              className="block w-full pl-7 pr-12 rounded-xl border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
+              className="block w-full pl-7 pr-12 rounded-xl border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white focus:text-gray-900 dark:focus:text-white transition-colors duration-200"
               placeholder="0.00"
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
